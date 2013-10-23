@@ -1,0 +1,739 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"w",
+				"w"
+			],
+			[
+				"h",
+				"height"
+			],
+			[
+				"te",
+				"theta"
+			],
+			[
+				"t",
+				"theta"
+			],
+			[
+				"SH",
+				"SCHED_RR"
+			],
+			[
+				"runq",
+				"runqueue_max"
+			],
+			[
+				"runqueue_m",
+				"runqueue_min"
+			],
+			[
+				"runqueue_",
+				"runqueue_max"
+			],
+			[
+				"SC",
+				"SCHED_PRIORITY_RR"
+			],
+			[
+				"sche",
+				"sched_mode"
+			],
+			[
+				"sch",
+				"sched_mode"
+			],
+			[
+				"SCH",
+				"SCHED_RR"
+			],
+			[
+				"SCHE",
+				"SCHED_FIFO"
+			],
+			[
+				"r",
+				"r"
+			],
+			[
+				"esc",
+				"escena"
+			],
+			[
+				"ini",
+				"ini_camara_optica"
+			],
+			[
+				"x",
+				"x"
+			],
+			[
+				"op",
+				"optica_ortho"
+			],
+			[
+				"es",
+				"escena"
+			],
+			[
+				"optica_",
+				"optica_ortho"
+			],
+			[
+				"cam",
+				"cam"
+			],
+			[
+				"ra",
+				"rad"
+			],
+			[
+				"y",
+				"y"
+			],
+			[
+				"cen",
+				"cen"
+			],
+			[
+				"d",
+				"d"
+			],
+			[
+				"opti",
+				"optica_pres"
+			],
+			[
+				"opticaO",
+				"optica_ortho"
+			],
+			[
+				"conf_ca",
+				"conf_camara_pres"
+			],
+			[
+				"con",
+				"conf_camara_ortho"
+			],
+			[
+				"mode",
+				"modePres"
+			],
+			[
+				"GL_DEP",
+				"GLUT_DEPTH"
+			],
+			[
+				"sp",
+				"sphere_pres"
+			],
+			[
+				"glTRa",
+				"glTranslatef"
+			],
+			[
+				"o",
+				"optica"
+			],
+			[
+				"ve",
+				"vector	std::vector"
+			],
+			[
+				"do",
+				"double"
+			],
+			[
+				"ce",
+				"cen"
+			],
+			[
+				"pro",
+				"proceso_hijo"
+			],
+			[
+				"pinta_",
+				"pinta_ejes"
+			],
+			[
+				"Le",
+				"LegoManInf"
+			],
+			[
+				"le",
+				"LegoManInf"
+			],
+			[
+				"gl",
+				"glColor3d"
+			],
+			[
+				"centro",
+				"centro_caja"
+			],
+			[
+				"x_max",
+				"x_max-x_min"
+			],
+			[
+				"xmin",
+				"x_min"
+			],
+			[
+				"x_",
+				"x_min"
+			],
+			[
+				"centr",
+				"centro_caja"
+			],
+			[
+				"i",
+				"i"
+			],
+			[
+				"vet",
+				"vertices"
+			],
+			[
+				"v",
+				"v"
+			],
+			[
+				"ver",
+				"Vertex"
+			],
+			[
+				"glP",
+				"glPopMatrix"
+			],
+			[
+				"glutW",
+				"glutWireSphere"
+			],
+			[
+				"l",
+				"l"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "def.cc",
+			"settings":
+			{
+				"buffer_size": 7717,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "#if defined(__APPLE__)\n        #include <OpenGL/OpenGL.h>\n        #include <GLUT/GLUT.h>\n#else\n        #include <GL/gl.h>\n        #include <GL/glu.h>\n        #include <GL/freeglut.h>\n#endif\n#include \"iostream\"\n#include \"model.h\"\n#include\"math.h\" //double asin(double x);\n#define _USE_MATH_DEFINES\nusing namespace std;\n\n\nModel m;\nint alt, amp; // de la finestra\nint grausX, grausY;\nfloat despX, despY; // despX de la rotacio\nchar estat;\nbool paretsVisibles;\ndouble relacioAspecte;\ndouble radiEsferaMinima;\ndouble dist;\nbool ortogonal;\n\nstruct caixaMinima{\n    float minX, minY, minZ, maxX, maxY, maxZ;\n};\n\ncaixaMinima cm;\n\nvoid inicialitzaCaixaMinima(){\n\n    //EM RECORRO EL VECTOR DE VERTEX A SACO, perque es especific de cada model,\n    // el recorres tot sabent que estan les x, y i z en ordre\n    cm.maxX = cm.minX = m.vertices()[0];\n    cm.maxY = cm.minY = m.vertices()[1];\n    cm.maxZ = cm.minZ = m.vertices()[2];\n\n    for( int i = 3; i < m.vertices().size(); i+=3 ){ // vector de faces\n            float xProvisional = m.vertices()[ i ]; // x\n            float yProvisional = m.vertices()[ i+1]; // y\n            float zProvisional = m.vertices()[ i+2]; // z\n\n            if( xProvisional > cm.maxX ) cm.maxX = xProvisional;\n            if( xProvisional < cm.minX ) cm.minX = xProvisional;\n            if( yProvisional > cm.maxY ) cm.maxY = yProvisional;\n            if( yProvisional < cm.minY ) cm.minY = yProvisional;\n            if( zProvisional > cm.maxZ ) cm.maxZ = zProvisional;\n            if( zProvisional < cm.minZ ) cm.minZ = zProvisional;\n    }\n\n    cout << \"Caixa \" << cm.maxX << \" \" << cm.minX << \" \" << cm.maxY << \" \" << cm.minY << \" \" << cm.maxZ << \" \" << cm.minZ << endl;\n}\n\nvoid inicialitzaEsferaMinima(){\n\n\n    caixaMinima c;\n    c.minX = c.minZ = -5.0;\n    c.maxX = c.maxZ = 5.0;\n    c.minY = 0.0;\n    c.maxY = 1.5; //inicialita amb el terra\n\n    double restaqx = pow((c.maxX-c.minX),2.0);\n    double restaqy = pow((c.maxY-c.minY),2.0);\n    double restaqz = pow((c.maxZ-c.minZ),2.0);\n    double diametre = sqrt(restaqx + restaqy + restaqz);\n\n    radiEsferaMinima = diametre/2 ;\n\n    dist = 2*radiEsferaMinima;\n\n    cout << \" radiesf -> \" << diametre << endl;\n\n}\n\nvoid escalaModel( float escalaX, float escalaY, float escalaZ ){\n    // perque estigui proporcionat es devideix 1/mida maxima\n    // sino el deforma perque fa que tots els costats vagin de -1 a 1\n    float midaX = ( cm.maxX-cm.minX) ;\n    float midaY = ( cm.maxY-cm.minY) ;\n    float midaZ = ( cm.maxZ-cm.minZ) ;\n    float midamax = max( midaX, midaY );\n    midamax = max( midamax, midaZ );\n    // 1/midamax fa la relacio a 1, i *2 perque vagi de -1 a 1\n    // i * escala per fer la escala que volem * 0.5 per compensar el 2\n    glScalef( escalaX*(2/midamax) , escalaY*(2/midamax) , escalaZ*(2/midamax) );\n}\n\nvoid desplacarAlCentre(){\n    //desplaço en sentit negatiu el centre de la caixa\n    float px = (cm.maxX+cm.minX)/(-2.0);\n    //float py = (cm.maxY+cm.minY)/(-2.0); //CENTRE DE LES Y\n    float py = cm.minY * -1.0; // per agafar el centre la base\n    float pz = (cm.maxZ+cm.minZ)/(-2.0);\n    glTranslatef( px, py , pz );\n}\n\nvoid pintaModel(){\n\n    glPushMatrix();\n\n    float movX = ((despX*2.0) -1.0);\n    float movY = ((despY*(2.0))-1.0);\n\n    glTranslatef( movX, 0.0 , movY ); // 0.25 es la distancia del centre als peus\n\n    escalaModel( 0.5, 0.5, 0.5); // 2*0.25= 0.5 que demana l enunciat\n\n    desplacarAlCentre();\n\n    for(int i = 0; i < m.faces().size(); i++){\n       glColor4fv(  &Materials[ m.faces()[i].mat ].diffuse[0]);\n\n        glBegin(GL_TRIANGLES);\n            glVertex3dv( &m.vertices()[m.faces()[i].v[0]]) ;\n            glVertex3dv( &m.vertices()[m.faces()[i].v[1]]) ;\n            glVertex3dv( &m.vertices()[m.faces()[i].v[2]]) ;\n        glEnd();\n    }\n    glPopMatrix();\n}\n\nvoid pintaNinotNeu( int posX, int posY, int posZ ){\n\n    glPushMatrix(); //cos\n        glTranslatef(posX, 0.4, posZ);\n        glColor3f(1.0, 1.0, 1.0);\n        glutSolidSphere(0.4, 30, 30);\n    glPopMatrix();\n    glPushMatrix(); // cap\n        glTranslatef(posX, 0.9, posZ);\n        glutSolidSphere(0.2, 30, 30);\n        glPopMatrix();\n    glPushMatrix(); // nas\n        glTranslatef(posX, 0.9, posZ);\n        glColor3f(1.0, 0.4, 0.0);\n        glutSolidCone(0.075, 0.2, 20 , 20);\n    glPopMatrix();\n}\n\nvoid pintaTerra(){\n\n    glPushMatrix();\n    glColor3f( 0.55, 0.24, 0.2);\n    glBegin( GL_QUADS );\n        glVertex3f( 5.0, 0.0, 5.0 );\n        glVertex3f( 5.0, 0.0, -5.0 );\n        glVertex3f( -5.0, 0.0, -5.0 );\n        glVertex3f( -5.0, 0.0, 5.0 );\n    glEnd();\n    glPopMatrix();\n}\n\nvoid pintaParets(){\n    glPushMatrix();\n    glColor3f(0.0, 0.6, 0.0);\n    glBegin( GL_QUADS );\n        glVertex3f( 0.5, 0.0, -1.5 );\n        glVertex3f( 4.5, 0.0, -1.5 );\n        glVertex3f( 4.5, 1.5, -1.5 );\n        glVertex3f( 0.5, 1.5, -1.5 );\n    glEnd();\n    glPopMatrix();\n\n    glPushMatrix();\n    glColor3f(0.0, 0.6, 0.0);\n    glBegin( GL_QUADS );\n    glVertex3f( -4.9, 0.0, 5.0 );\n    glVertex3f( -4.9, 0.0, -5.0 );\n    glVertex3f( -4.9, 1.5, -5.0 );\n    glVertex3f( -4.9, 1.5, 5.0 );\n    glEnd();\n    glPopMatrix();\n}\n\nvoid pintaEsfera(){\n    glPushMatrix(); //cos\n        glColor3f(0.0, 0.5, 0.5);\n        glutWireSphere( radiEsferaMinima , 30, 30);\n    glPopMatrix();\n}\n\nvoid refresh(void) {\n\n        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );\n\n        pintaEsfera();\n\n        pintaTerra();\n\n        pintaModel();\n\n        pintaNinotNeu( 2.5, 0, 2.5);\n        pintaNinotNeu( -2.5, 0, 2.5);\n        pintaNinotNeu( -2.5, 0, -2.5);\n        pintaNinotNeu( 2.5, 0, -2.5);\n\n        if(paretsVisibles) pintaParets();\n\n        glutSwapBuffers();\n}\n\n\nvoid motionf(int newx, int newy){\n    // depenent de l'estat actualitza els graus o el desp\n    if( estat == 'c'){\n        despX = ( (float) newx / (float) amp );\n        despY = ( (float) newy / (float) alt );\n    }\n\n    if(estat == 'm'){\n\n        grausX = ((float) newx/ (float) amp )*360;\n        grausY = ((float) newy/ (float) alt )*(-360);\n\n        glRotated( grausY, 1.0, 0.0, 0.0); // x\n        glRotated( grausX, 0.0, 1.0, 0.0); // y\n\n    }\n    glutPostRedisplay();\n}\n\n\nvoid posicionaCamera(){ //GlLookAt\n   glLoadIdentity();\n   double ox, oy, oz, vx, vy, vz, upx, upy, upz;\n\n   ox =0;   oy =0;  oz = dist;\n   vx =0;   vy =0;  vz = 0;\n   upx =0;  upy =1; upz =0;\n\n   gluLookAt(ox, oy, oz, vx, vy, vz, upx, upy, upz );\n}\n\nvoid initOrtogonal(){\n\n    glMatrixMode(GL_PROJECTION);\n    glLoadIdentity();\n\n    double migAmpleCamera = radiEsferaMinima; // del centre al canto\n    double migAltCamera = radiEsferaMinima; // de lcentre a dalt\n\n    if( relacioAspecte >= 1 ) // es mes ample que alt\n        migAmpleCamera = migAmpleCamera * relacioAspecte;\n    else    // es mes alt que ample\n        migAltCamera = migAltCamera / relacioAspecte;\n\n    glOrtho(\n        -migAmpleCamera, migAmpleCamera, // abaix esquerra\n        -migAltCamera, migAltCamera,     // adalt dreta\n          dist-radiEsferaMinima, dist+radiEsferaMinima  // zNear i zFar just en la escena\n        );\n\n    glMatrixMode(  GL_MODELVIEW );\n\n}\n\nvoid initPerspectiva(){\n\n    glMatrixMode(GL_PROJECTION);\n    glLoadIdentity();\n\n    double migAmpleCamera = radiEsferaMinima; // del centre al canto\n    double migAltCamera = radiEsferaMinima; // de lcentre a dalt\n\n    double angle = asin( radiEsferaMinima / dist );\n    \n    //si es mes ample que alt o igual ----> \"no cal fer res\"\n\n    if( relacioAspecte < 1.0 )  // es mes alt que ample\n        angle = atan( tan(angle) / relacioAspecte  );\n\n    angle = (angle*180)/M_PI; // pas a radiants\n\n    gluPerspective(\n          2*angle,\n          relacioAspecte,\n          dist-radiEsferaMinima , radiEsferaMinima+dist  // zNear i zFar just en la escena\n        );\n\n    glMatrixMode(  GL_MODELVIEW );\n\n}\n\n\nvoid initCamara(){\n\n    if( ortogonal )\n        initOrtogonal();\n\n    else if( ! ortogonal )\n        initPerspectiva();\n\n    posicionaCamera();    //glLookAt\n\n    glutPostRedisplay();\n}\n\nvoid reshape( int ampleW, int altW){\n\n    cout << \"new size: x= \" << ampleW << \", y= \" << altW << endl;\n\n    // el que vull que tingui el viewPort (es pot posar directament la crida a viewport)\n    amp = ampleW;\n    alt = altW;\n\n    relacioAspecte = (double) ampleW / (double) altW;\n    cout << \" relacio d' aspecte \" << relacioAspecte << endl;\n\n    initCamara();\n\n    glViewport( 0, 0, ampleW, altW );\n\n    glutPostRedisplay();\n}\n\nvoid kbrd( unsigned char key, int x, int y ){\n    if( key == 'h' ){\n        cout << endl << \"###############################################################\" << endl;\n        cout << endl <<\" *   f      -> omplir cares\" << endl;\n        cout << endl <<\" *   l      -> veure contorn de les cares\" << endl;\n        cout << endl <<\" *   ESC    -> tancar el programa\" << endl;\n        cout << endl <<\" *   c      -> fer caminar al lego quan arrastres\" << endl;\n        cout << endl <<\" *   e      -> fer girar l' escena amb angles d Euler\" << endl;\n        cout << endl <<\" *   v      -> parets visibles / no visibles\" << endl;\n        cout << endl <<\" *   any    -> desctivar els modes anteriors\"<< endl;\n        cout << endl <<\"###############################################################\" << endl << endl;\n    }\n    else if( key == 'f' ) {\n        cout <<  endl << \"  CARES\" << endl;   estat = 'f';\n        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );\n        glutPostRedisplay();\n    }\n    else if(key == 'l'){\n        cout <<  endl << \"  LINIES\" << endl;  estat = 'l';\n        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );\n        glutPostRedisplay();\n    }\n    else if( key == 'c'){\n        cout << endl << \"   CAMINAR\" << endl; estat = 'c';\n    }\n    else if( key == 'e'){\n        cout << endl << \"   EULER\" << endl; estat = 'e';\n    }\n    else if( key == 'v'){\n        cout << endl << \"   PARETS\" << endl; estat = 'v';\n        paretsVisibles = ! paretsVisibles;\n        glutPostRedisplay();\n    }\n    else if( key == 'x'){\n        cout <<  endl << \"  CAMERA ORTOGONAL\" << endl << endl; estat = 'x';\n        ortogonal = true;\n        initCamara();\n    }\n    else if( key == 'p'){\n        cout << endl << \"   CAMERA PERSPECTIVA\" << endl << endl; estat = 'p';\n        ortogonal = false;\n        initCamara();\n    }\n    else if( key == 27) exit(0); // ESC\n\n    else estat = 'n'; // estat nul\n}\n\nint main(int argc, const char * argv[]) {\n\n        glutInit(&argc, (char**)argv );\n        glutInitWindowPosition( 0, 0 );\n        glutInitDisplayMode( GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);\n        glutInitWindowSize(600, 600);\n        glutCreateWindow(\"IDI:PractiquesOpenGL\");\n        glEnable(GL_DEPTH_TEST);\n\n        estat = 'f';\n        grausX = grausY = 0;\n        despX = 0.5; despY = 0.5;\n        ortogonal = paretsVisibles = true;\n\n        cout << endl << \"------------------- h  ->  per veure el menu --------------------- \" << endl << endl;\n\n        m.load(argv[1]); // l objecte que se li passa per parametre l programa\n\n        inicialitzaCaixaMinima(); //del model\n        inicialitzaEsferaMinima(); // de l'escena\n\n        initCamara();\n\n        glutDisplayFunc(refresh);\n        glutReshapeFunc( reshape ); // resize\n        glutMotionFunc( motionf ); //  drag\n        glutKeyboardFunc( kbrd ); // teclat\n\n        glutMainLoop();\n        return 0;\n}\n\n/*\n\n• Permeti inspeccionar l’escena modificant els angles d’Euler amb el ratolı.\n\n• Permeti fer zoom modificant l’optica de la camera activa, tal i com s’indica en la Seccio 6.\n\n• Permeti passar a mode d’inspeccio en primera persona e inspeccionar l’escena amb les dos tecniques de walk indicades a la Seccio 8.2.\n\n• Permeti fer un reset per tornar a la visualitzacio de l’escena des de la camera inicial, en premer la tecla ’r’.\n\n-------------------------------- FET --------------------------------------------------------------------------\n\n• Hi hagi un help que mostri com activar les diferents funcionalitats.\n• En iniciar l’aplicacio mostri l’escena indicada en la Seccio 7 des d’una posicio arbitraria (sense retallar),\n    amb una camera perspectiva i aprofitant la grandaria del viewport (definit com tota la finestra grafica).\n• Permeti fer visibles/invisibles les parets en qualsevol moment de l’execucio de l’aplicacio (tecla ’v’).\n• Permeti communtar entre les cameres perspectiva i axonometrica (tecla ’p’). En cap cas ha d’haver-hi deformacio si es fa un resize’.\n\n*/\n",
+			"file": "/home/daniel/Desktop/main.cpp",
+			"file_size": 12380,
+			"file_write_time": 1382372427000000,
+			"settings":
+			{
+				"buffer_size": 12322,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Makefile",
+			"settings":
+			{
+				"buffer_size": 373,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "#if defined (__APPLE__)\n	#include <OpenGL/OpenGL.h>\n	#include <GLUT/GLUT.h>\n#else\n	#include <GL/gl.h>\n	#include <GL/freeglut.h>\n#endif\n#include <iostream>\n#include <vector>\n#include \"model.h\"\n#include <math.h>\nusing namespace std;\n\nstruct point {\n	double x,y,z;\n};\nint r=0;\nstruct  camara {\n	point VRP;\n	double phi;\n	double theta;\n	double d;\n	std::vector<double> optica;\n};\n\nstruct caja { //MINIMUN BOX FOR OBJECT\n	double x_max, x_min;\n	double y_max, y_min;\n	double z_max, z_min;\n};\n\nstruct esfera {\n	double rad;\n	point cen;	\n};\n\n\nModel m;\n//MODES\nbool modeLine, modeRotate;\n//\n//CONFIG PARAMETERS\ndouble back;\nint stacks;\nint slices;\n//\n//INFO\ndouble width; double height; //VIEWPORT SIZE\nint x, y; //MOUSE POSITION\n//\n//OBJECT & SCENE DATA\nstd::vector<char> v;\nesfera escena;\ndouble rx,ry;\n//\n//cAMARA\ncamara cam;\n\nvoid initGL (int argc, const char *argv[])\n {\n	glutInit(&argc, (char **)argv);\n	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);\n	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);\n	glutInitWindowPosition(0,0);\n	glutInitWindowSize(1000,600);\n	glutCreateWindow(\"IDI: Practiques OpenGL\");\n	glClearColor(0.25,0.65,0.1,0);\n	glEnable(GL_DEPTH_TEST);\n}\n\n\nvoid pinta_ejes(){\n	glBegin(GL_LINES);\n		glColor3f(1,0,0);\n		glVertex3d(0,0,0);\n		glVertex3d(1,0,0);\n	glEnd();\n	glBegin(GL_LINES);\n		glColor3d(0,1,0);\n		glVertex3d(0,0,0);\n		glVertex3d(0,1,0);\n	glEnd();\n	glBegin(GL_LINES);\n		glColor3f(0,0,1);\n		glVertex3f(0,0,0);\n		glVertex3f(0,0,1);\n	glEnd();\n}\n\nvoid refresh(void) {\n	\n	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);\n	glMatrixMode (GL_MODELVIEW);\n	glLoadIdentity();\n	glPushMatrix();\n      	\n      	//glRotatef(r,0,1,0);\n\n		/*\n		glPushMatrix();\n			glTranslatef(0,0,0);\n			glRotatef(45,0,1,0);\n			glColor3f(1,0,0);\n			glutSolidTeapot(0.5);\n		glPopMatrix();\n\n		glPushMatrix();\n			glColor3f(0,0,1);\n			glutSolidCube(0.7);\n		glPopMatrix();\n		*/\n\n\n		/*glLoadIdentity();\n		glTranslatef(0,0,cam.d);\n		glRotatef(cam.theta,1,0,0);\n		glRotatef(cam.phi,0,1,0);\n		glTranslatef(cam.VRP.x,cam.VRP.y,cam.VRP.z);\n		*/\n\n		glPushMatrix();\n			glColor3f(0,1,0);\n		    glTranslatef(5,0,0);\n			glutSolidSphere(3,stacks,slices);\n		glPopMatrix();\n\n		glPushMatrix();\n			glColor3f(1,0,0);\n			glTranslatef(12,0,0);\n			glutSolidSphere(2,stacks,slices);\n		glPopMatrix();\n\n	glPopMatrix();\n	r= (r+1)%360; \n	pinta_ejes();\n	glutSwapBuffers();\n	//glutPostRedisplay();\n}\nvoid setViewport(int w, int h)\n{\n\n	glMatrixMode(GL_PROJECTION);\n	glLoadIdentity();\n	double alpha = 18;\n	double arv = double(double(h)/double(w));\n	arv = (arv>1) ? arv : 1/arv;\n	gluPerspective(alpha, arv ,5,26);\n	//gluPerspective(17, arv ,5,26);\n	gluLookAt(26,10,0,12,0,0,0,0,1);\n}\n\nint main(int argc,const char * argv[])\n{\n	slices = 50;\n	stacks = 50;\n	\n	initGL(argc,argv);\n	glutDisplayFunc (refresh);\n	glutReshapeFunc(setViewport);	\n	glutMainLoop();\n	return 0;\n}",
+			"file": "ejem.cc",
+			"file_size": 2777,
+			"file_write_time": 1382263066000000,
+			"settings":
+			{
+				"buffer_size": 2820,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 392.0,
+		"selected_items":
+		[
+		],
+		"width": 392.0
+	},
+	"console":
+	{
+		"height": 0.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/sys.c",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/sched.c",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab3/def.cc",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/interrupt.c",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/libc.c",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/include/sched.h",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/include/list.h",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/user.c",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/mm.c",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/entry.S",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/include/mm.h",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/include/stats.h",
+		"/home/daniel/Dropbox/FIB/SOAD/LabZeOSSched/ZeOs_v3_completat/semaforo.c",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab3/Makefile",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab3/sphere_pres.cc",
+		"/home/daniel/Desktop/main.cpp",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab3/sessio3.cc",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/ejem2.cc",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/ejem.cc",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab3/ejem.cc",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/Makefile",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/test2.cc",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/sphere_pres.cc",
+		"/home/daniel/Dropbox/FIB/SOAD/Programas/easy_fork.c",
+		"/home/daniel/Dropbox/FIB/SOAD/Programas/easy_fork2.c",
+		"/home/daniel/Dropbox/FIB/SOAD/Programas/anali.c",
+		"/home/daniel/Dropbox/FIB/SOAD/Programas/easy_frok.c",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/model.h",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/sessio2.cc",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab1/first_test.cc",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/model.cpp",
+		"/home/daniel/Dropbox/FIB/SOAD/Sesion1/LabZeOS-codis/ZeOs_v3/include/mm_address.h",
+		"/home/daniel/Dropbox/FIB/SOAD/Sesion1/LabZeOS-codis/ZeOs_v2/include/mm_address.h",
+		"/home/daniel/Dropbox/FIB/SOAD/Sesion1/LabZeOS-codis/ZeOs_v1/include/mm_address.h",
+		"/home/daniel/Dropbox/FIB/SOAD/Sesion1/LabZeOS-codis/ZeOs_v1/include/asm.h",
+		"/home/daniel/Dropbox/FIB/SOAD/Sesion1/LabZeOS-codis/ZeOs_v3/include/asm.h",
+		"/home/daniel/Dropbox/FIB/SOAD/Sesion1/LabZeOS-codis/ZeOs_v2/include/asm.h",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/ç",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/porsche.obj",
+		"/home/daniel/Dropbox/FIB/IDI/OpenGL/Lab2/porsche.mtl",
+		"/home/daniel/Lab1/ZeOs_v1/Makefile",
+		"/home/daniel/Dropbox/FIB/SOAD/Sesion1/Sesion 1/trabajo sesion.txt",
+		"/home/daniel/Lab1/trabajo sesion.txt",
+		"/home/daniel/.bashrc",
+		"/home/daniel/Lab1/ZeOs_v1/ZeOs_v1.sublime-workspace",
+		"/home/daniel/Lab1/ZeOs_v1/bootsect",
+		"/home/daniel/Desktop/a.c",
+		"/home/daniel/Dropbox/FIB/PAR/LAB4/mandel-omp.c"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"def",
+			"grausY",
+			"cam",
+			"cam.phi",
+			"amp",
+			"glLookAt",
+			"despX",
+			"motionf",
+			"mouseMo",
+			"mouseMOce",
+			"x",
+			"escena",
+			"pinta_terra",
+			"runqueue",
+			"run",
+			"tss",
+			"task_switch",
+			"}\n",
+			"task_union",
+			"init_task_structs",
+			"list_add_tail",
+			"camara",
+			"desplacarAlCentre",
+			"diametre",
+			"radiEsferaMinima",
+			"escena",
+			"relacioAspecte",
+			"optica_ortho",
+			"cam",
+			"arco",
+			"rav",
+			"escena",
+			"optica",
+			"camara",
+			"cam",
+			"arctg",
+			"a",
+			"26",
+			"INITgl",
+			"VPR",
+			"VRP",
+			"vpr",
+			"camara",
+			"Esfera",
+			"esfera",
+			"Esfera",
+			"esfera",
+			"Caja",
+			"caja",
+			"camara",
+			"CAMARA",
+			"camara",
+			"Point",
+			"matrixMo",
+			"legoman",
+			"lego",
+			");\n",
+			"snowman",
+			"LegoMan",
+			"LegoManInf",
+			"legomaninf",
+			"refresh",
+			"x",
+			"ex",
+			"rx",
+			"height",
+			"stack",
+			"size_cube",
+			"sizecube",
+			"sizeCube",
+			"radius_sphere",
+			"modeTranslate2",
+			"glpolygon",
+			"caja",
+			"Caja",
+			"legoman",
+			"l_min",
+			"min",
+			"legoman",
+			"glutini",
+			"snowman",
+			"ref",
+			"refresh",
+			"ref",
+			"refe",
+			"snow",
+			"		",
+			"PAG_LOG_INIT_DATA_P0",
+			"name",
+			"2",
+			"!!"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 2,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "def.cc",
+					"settings":
+					{
+						"buffer_size": 7717,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								787,
+								787
+							],
+							[
+								1946,
+								1946
+							],
+							[
+								1986,
+								1986
+							],
+							[
+								2085,
+								2085
+							],
+							[
+								2135,
+								2135
+							],
+							[
+								2203,
+								2203
+							],
+							[
+								2250,
+								2250
+							],
+							[
+								3094,
+								3094
+							],
+							[
+								3139,
+								3139
+							],
+							[
+								3196,
+								3196
+							],
+							[
+								3215,
+								3215
+							],
+							[
+								6254,
+								6254
+							],
+							[
+								6274,
+								6274
+							],
+							[
+								6305,
+								6305
+							],
+							[
+								6337,
+								6337
+							],
+							[
+								6348,
+								6348
+							],
+							[
+								6359,
+								6359
+							],
+							[
+								7282,
+								7282
+							],
+							[
+								7309,
+								7309
+							],
+							[
+								7336,
+								7336
+							],
+							[
+								7363,
+								7363
+							],
+							[
+								7379,
+								7379
+							],
+							[
+								7393,
+								7393
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2419.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/home/daniel/Desktop/main.cpp",
+					"settings":
+					{
+						"buffer_size": 12322,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								140,
+								140
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 14.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "Makefile",
+					"settings":
+					{
+						"buffer_size": 373,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								317,
+								317
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Makefile/Makefile.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "ejem.cc",
+					"settings":
+					{
+						"buffer_size": 2820,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1069,
+								1069
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1995.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 34.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 112.0
+	},
+	"replace":
+	{
+		"height": 0.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"mm_a",
+				"ZeOs_v3/include/mm_address.h"
+			],
+			[
+				"mm_adres",
+				"ZeOs_v1/include/mm_address.h"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+			[
+				"",
+				"/home/daniel/Lab1/ZeOs_v1/ZeOs_v1.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 248.0,
+	"status_bar_visible": true
+}
