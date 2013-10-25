@@ -38,7 +38,7 @@ struct esfera {
 
 Model m;
 //MODES
-bool modeRotate, modePres;
+bool modeRotate, modePres, modeWalls;
 //
 //CONFIG PARAMETERS
 int stacks;
@@ -75,66 +75,79 @@ void conf_camara_ortho () {
 	glMatrixMode(GL_PROJECTION);	
 	glLoadIdentity();				
 	glOrtho(optica_ortho[0],optica_ortho[1],optica_ortho[2],
-	optica_ortho[3],optica_ortho[4],optica_ortho[5]);	
-	glMatrixMode(GL_MODELVIEW);		
+	optica_ortho[3],optica_ortho[4],optica_ortho[5]);
+	glMatrixMode(  GL_MODELVIEW );
 }
 
 void conf_camara_pres () {
 	glMatrixMode(GL_PROJECTION);	
 	glLoadIdentity();				
 	gluPerspective(optica_pres[0], optica_pres[1] ,optica_pres[2],optica_pres[3]);
-	glMatrixMode(GL_MODELVIEW);		
+	glMatrixMode(GL_MODELVIEW);
 }
 
 void ini_camara_optica (){
 	double arv = double(double(width)/double(height));
 	//OPTICA
-  	if (!modePres) {
-  		double aux = (arv >= 1)
-  			? escena.rad*arv 
-  			: escena.rad/arv;
-		optica_ortho[0] = -aux;
-		optica_ortho[1] = aux;
-		optica_ortho[2] = -aux;
-		optica_ortho[3] = aux;
-		optica_ortho[4] = cam.d - escena.rad;
-		optica_ortho[5] = cam.d + escena.rad;
-	}
-	else {
-		optica_pres[0] = (arv < 1.0) 
-			? 2*( (atan( tan(asin(escena.rad/cam.d)) /arv) *180)/PI)
-			: 2*( (asin(escena.rad/cam.d)*180)/PI);
-		optica_pres[1] = arv; 		//arv
-		optica_pres[2] = cam.d - escena.rad;//znear;
-		optica_pres[3] = cam.d + escena.rad;//zfar;
-	}
+	double aux = (arv >= 1)
+		? escena.rad*arv 
+		: escena.rad/arv;
+	optica_ortho[0] = -aux;
+	optica_ortho[1] = aux;
+	optica_ortho[2] = -aux;
+	optica_ortho[3] = aux;
+	optica_ortho[4] = cam.d - escena.rad;
+	optica_ortho[5] = cam.d + escena.rad;
+
+	optica_pres[0] = (arv < 1.0) 
+		? 2*( (atan( tan(asin(escena.rad/cam.d)) /arv) *180)/PI)
+		: 2*( (asin(escena.rad/cam.d)*180)/PI);
+	optica_pres[1] = arv; 				//arv
+	optica_pres[2] = cam.d - escena.rad;//znear;
+	optica_pres[3] = cam.d + escena.rad;//zfar;
 }
 
 void setViewport(int w, int h) {
 	width = w;
 	height = h;
-	glViewport(0,0,w,h);
 	ini_camara_optica();
+	if (modePres) conf_camara_pres();
+	else conf_camara_ortho();
+	glViewport(0,0,w,h);
 	glutPostRedisplay();
 }
 
 void keyboarEve(unsigned char key, int x, int y) 
 {
 	if (key == 'h') {
-		cout << " HELP" << endl;
-		cout << "f -> Cambia entre camara prespectiva y ortho" << endl;
+		cout << "HELP" << endl;
+		cout << "p -> Cambia entre camara prespectiva y ortho" << endl;
+		cout << "q -> Activa/Desactiva rotacion" << endl;
+		cout << "v -> Muestra/Oculta las apredes" << endl;
 		cout << "ESC -> Cerrar programa" << endl; 
 	}
-	if (key == 'r') {
+	if (key == 'q') {
 		modeRotate = !modeRotate;
 		if (modeRotate) cout << "Haz clic y desplaza el raton para rotar la figura - mode 1" << endl;
 		else cout << "Modo rotacion desactivado" << endl;
 	}
-	if (key == 'f') {
+	if (key == 'p') {
 		modePres = !modePres;
-		if (modePres) cout << "Camara en prespectiva" << endl;
-		else cout << "Camara orthogonal" << endl;	
-		ini_camara_optica();
+		//ini_camara_optica();
+		if (modePres) {
+			conf_camara_pres();
+		 	cout << "Camara en prespectiva" << endl;	
+		}
+		else {
+			conf_camara_ortho();
+			cout << "Camara orthogonal" << endl;	
+		}
+		glutPostRedisplay();
+	}
+	if (key == 'v') {
+		modeWalls = !modeWalls;
+		if (modeWalls) cout << "Muestra paredes" << endl;
+		else cout << "Oculta paredes" << endl;
 		glutPostRedisplay();
 	}
 	if (key == 27) exit(0);
@@ -142,15 +155,33 @@ void keyboarEve(unsigned char key, int x, int y)
 
 void mouseMove (int w, int h){
 	if (modeRotate) {
-		cam.phi = ((float) w/ (float) width )*360;
-		cam.theta = ((float) h/ (float) height )*360;
-
-		cout << cam.theta << "," <<cam.phi << endl;
+		cam.phi += (x-w)*0.3;
+		cam.theta += (y-h)*0.3;
+		x = w;
+		y = h;
+		//cout << cam.theta << "," <<cam.phi << endl;
 		glutPostRedisplay();
 	}
 }
 
 void mouseClick(int b, int r, int xx, int yy){
+	if (modePres) {
+		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP) ++optica_pres[0];
+		else if (GLUT_ACTIVE_CTRL && b == 4 && r == GLUT_UP) --optica_pres[0];
+		conf_camara_pres();	
+	}
+	else {
+		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP) {
+			optica_ortho[0] = optica_ortho[2] -= 0.5;
+			optica_ortho[1] = optica_ortho[3] += 0.5;
+		}
+		else if (GLUT_ACTIVE_CTRL && b == 4 && r == GLUT_UP) {
+			optica_ortho[0] = optica_ortho[2] += 0.5;
+			optica_ortho[1] = optica_ortho[3] -= 0.5;	
+		}
+		conf_camara_ortho();
+	}
+	glutPostRedisplay();
 	x = xx;
 	y = yy;
 }
@@ -279,16 +310,27 @@ void pinta_ejes(){
 	glEnd();
 }
 
+void pinta_paret (){
+	glPushMatrix();
+		glTranslatef(2.5,0.75,-1.5);
+		glScaled(4,1.5,0.2);
+		glutSolidCube(1);
+	glPopMatrix();
+	glPushMatrix();
+		glTranslatef(-4.9,0.75,0);
+		glScaled(0.2,1.5,10);
+		glutSolidCube(1);
+	glPopMatrix();
+}
+
 void refresh(void) {
-	if (modePres) conf_camara_pres();
-	else conf_camara_ortho();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 	glPushMatrix();
 		glTranslatef(0,0,-cam.d);
 		glRotatef(cam.theta,1,0,0);
-		glRotatef(-cam.phi,0,1,0);
+		glRotatef(cam.phi,0,1,0);
 		glTranslatef(-cam.VRP.x,-cam.VRP.y,-cam.VRP.z);
 		
 		glPushMatrix();
@@ -309,14 +351,7 @@ void refresh(void) {
 		glPopMatrix();
 
 		glPushMatrix();
-			glTranslatef(2.5,0.75,-1.5);
-			glScaled(4,1.5,0.2);
-			glutSolidCube(1);
-		glPopMatrix();
-		glPushMatrix();
-			glTranslatef(-4.9,0.75,0);
-			glScaled(0.2,1.5,10);
-			glutSolidCube(1);
+			if (modeWalls) pinta_paret();
 		glPopMatrix();
 
 		glPushMatrix();
@@ -338,25 +373,27 @@ void refresh(void) {
 
 int main(int argc,const char * argv[])
 {
+	initGL(argc,argv);
 	m.load("porsche.obj");
 	slices = 50;
 	stacks = 50;
 	modeRotate = false;
 	modePres = false;
+	modeWalls = false;
 	escena = esfera_cont_esce();
 	//POS
 	cam.VRP.x = escena.cen.x;
 	cam.VRP.y = escena.cen.y;
 	cam.VRP.z = escena.cen.z;
-	cam.theta = 0;
-	cam.phi = 0;
+	cam.theta = 45;
+	cam.phi = 45;
 	cam.d = 20;
 	std::vector<double> va(6);
 	std::vector<double> vaa(4);
 	optica_ortho = va;
 	optica_pres = vaa;
 	ini_camara_optica();
-	initGL(argc,argv);
+	conf_camara_ortho();
 	glutDisplayFunc (refresh);
 	glutReshapeFunc(setViewport);	
 	glutMouseFunc(mouseClick);
