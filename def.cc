@@ -286,11 +286,13 @@ void refresh(void) {
  	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 	glPushMatrix();
+
 		glTranslatef(0,0,-cam.d);
 		glRotatef(cam.theta,1,0,0);
 		glRotatef(-cam.phi,0,1,0);
 		glTranslatef(-cam.VRP.x,-cam.VRP.y,-cam.VRP.z);
-		
+		glLookAt(OBS,VRP, up);
+
 		glPushMatrix();
 			glTranslatef(2.5,0,2.5);
 			snowMan();
