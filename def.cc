@@ -25,6 +25,11 @@ struct  camara {
 	double d;
 };
 
+struct car {
+	point cen;
+	int ang;
+};
+
 struct caja { //MINIMUN BOX FOR OBJECT
 	double x_max, x_min;
 	double y_max, y_min;
@@ -54,6 +59,8 @@ double rx=0;
 double ry=0;
 //
 //cAMARA
+
+car coche;
 camara cam;
 std::vector<double> optica_ortho;
 std::vector<double> optica_pres;
@@ -89,13 +96,10 @@ void conf_camara_pres () {
 void ini_camara_optica (){
 	double arv = double(double(width)/double(height));
 	//OPTICA
-	double aux = (arv >= 1)
-		? escena.rad*arv 
-		: escena.rad/arv;
-	optica_ortho[0] = -aux;
-	optica_ortho[1] = aux;
-	optica_ortho[2] = -aux;
-	optica_ortho[3] = aux;
+	optica_ortho[0] = (arv > 1) ? -escena.rad*arv : -escena.rad; 	//LEFT
+	optica_ortho[1] = (arv > 1) ? escena.rad*arv : escena.rad;//RIGHT
+	optica_ortho[2] = (arv > 1) ? -escena.rad : -escena.rad/arv;//BOT
+	optica_ortho[3] = (arv > 1) ? +escena.rad : +escena.rad/arv;////TOP
 	optica_ortho[4] = cam.d - escena.rad;
 	optica_ortho[5] = cam.d + escena.rad;
 
@@ -150,6 +154,20 @@ void keyboarEve(unsigned char key, int x, int y)
 		else cout << "Oculta paredes" << endl;
 		glutPostRedisplay();
 	}
+	if(key == 'w'){
+	  coche.cen.z += cos(((coche.ang*PI)/180))*0.1; 
+	  coche.cen.x += sin(((coche.ang*PI)/180))*0.1;
+
+	}
+	if(key == 's'){
+	  coche.cen.z -= cos(((coche.ang*PI)/180))*0.1; 
+	  coche.cen.x -= sin(((coche.ang*PI)/180))*0.1;
+
+	}
+	if(key == 'a') coche.ang += 2;
+	if(key == 'd') coche.ang += -2;
+	if (key == 'a' or key == 's' or key == 'w' or key == 'd') glutPostRedisplay();
+	
 	if (key == 27) exit(0);
 }
 
@@ -165,6 +183,7 @@ void mouseMove (int w, int h){
 }
 
 void mouseClick(int b, int r, int xx, int yy){
+	double rat = width/height;
 	if (modePres) {
 		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP) ++optica_pres[0];
 		else if (GLUT_ACTIVE_CTRL && b == 4 && r == GLUT_UP) --optica_pres[0];
@@ -172,12 +191,16 @@ void mouseClick(int b, int r, int xx, int yy){
 	}
 	else {
 		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP) {
-			optica_ortho[0] = optica_ortho[2] -= 0.5;
-			optica_ortho[1] = optica_ortho[3] += 0.5;
+			optica_ortho[0] = (rat > 1) ? optica_ortho[0]+(0.5*rat) : optica_ortho[0]+0.5;
+			optica_ortho[1] = (rat > 1) ? optica_ortho[1]-(0.5*rat) : optica_ortho[1]-0.5;
+			optica_ortho[2] = (rat > 1) ? optica_ortho[2]+0.5 : optica_ortho[2]+(0.5/rat);
+			optica_ortho[3] = (rat > 1) ? optica_ortho[3]-0.5 : optica_ortho[3]-(0.5/rat);
 		}
 		else if (GLUT_ACTIVE_CTRL && b == 4 && r == GLUT_UP) {
-			optica_ortho[0] = optica_ortho[2] += 0.5;
-			optica_ortho[1] = optica_ortho[3] -= 0.5;	
+		optica_ortho[0] = (rat > 1) ? optica_ortho[0]-(0.5*rat) : optica_ortho[0]-0.5;
+		optica_ortho[1] = (rat > 1) ? optica_ortho[1]+(0.5*rat) : optica_ortho[1]+0.5;
+		optica_ortho[2] = (rat > 1) ? optica_ortho[2]-0.5 : optica_ortho[2]-(0.5/rat);
+		optica_ortho[3] = (rat > 1) ? optica_ortho[3]+0.5 : optica_ortho[3]+(0.5/rat);
 		}
 		conf_camara_ortho();
 	}
@@ -328,6 +351,7 @@ void refresh(void) {
  	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 	glPushMatrix();
+
 		glTranslatef(0,0,-cam.d);
 		glRotatef(cam.theta,1,0,0);
 		glRotatef(cam.phi,0,1,0);
@@ -355,6 +379,8 @@ void refresh(void) {
 		glPopMatrix();
 
 		glPushMatrix();
+			glTranslatef(coche.cen.x,0,coche.cen.z);
+			glRotatef(coche.ang,0,1,0);
 			pinta_model();
 		glPopMatrix();
 		
@@ -382,6 +408,10 @@ int main(int argc,const char * argv[])
 	modeWalls = false;
 	escena = esfera_cont_esce();
 	//POS
+	coche.cen.x = 0;
+	coche.cen.y = 0;
+	coche.cen.z = 0;
+	coche.ang = 0;
 	cam.VRP.x = escena.cen.x;
 	cam.VRP.y = escena.cen.y;
 	cam.VRP.z = escena.cen.z;
