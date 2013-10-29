@@ -130,6 +130,7 @@ void keyboarEve(unsigned char key, int x, int y)
 		cout << "v -> Muestra/Oculta las apredes" << endl;
 		cout << "m -> Camara en primera persona" << endl;
 		cout << "r -> Resetea camara" << endl;
+		cout << "Rueda del raton -> Zoom in/Zoom out" << endl;
 		cout << "'w','a','s', 'd' para mover el coche" << endl;
 		cout << "ESC -> Cerrar programa" << endl; 
 	}
