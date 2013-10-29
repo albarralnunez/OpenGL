@@ -43,7 +43,7 @@ struct esfera {
 
 Model m;
 //MODES
-bool modeRotate, modePres, modeWalls;
+bool modeRotate, modePres, modeWalls, modeFP;
 //
 //CONFIG PARAMETERS
 int stacks;
@@ -128,6 +128,9 @@ void keyboarEve(unsigned char key, int x, int y)
 		cout << "p -> Cambia entre camara prespectiva y ortho" << endl;
 		cout << "q -> Activa/Desactiva rotacion" << endl;
 		cout << "v -> Muestra/Oculta las apredes" << endl;
+		cout << "m -> Camara en primera persona" << endl;
+		cout << "r -> Resetea camara" << endl;
+		cout << "'w','a','s', 'd' para mover el coche" << endl;
 		cout << "ESC -> Cerrar programa" << endl; 
 	}
 	if (key == 'q') {
@@ -154,6 +157,31 @@ void keyboarEve(unsigned char key, int x, int y)
 		else cout << "Oculta paredes" << endl;
 		glutPostRedisplay();
 	}
+	if (key == 'r') {
+		ini_camara_optica();
+		if (modePres) conf_camara_pres();
+		else conf_camara_ortho();
+		cam.theta = 45;
+		cam.phi = 45;
+		glutPostRedisplay();
+	}
+	/*if (key == 'm') {
+		modeFP = !modeFP;
+		if (modeFP) {
+			gluLookAt(coche.cen.x,coche.cen.y,coche.cen.z-2, 	//OBS
+				coche.cen.x,coche.cen.y,coche.cen.z-3,			//VRP
+				0,1,0);											//up
+			glMatrixMode(GL_PROJECTION);	
+			glLoadIdentity();				
+			gluPerspective(60,1,1,10);
+			glMatrixMode(GL_MODELVIEW);
+		}
+		else {
+			ini_camara_optica();
+			conf_camara_pres();
+		}
+		glutPostRedisplay();	
+	}*/
 	if(key == 'w'){
 	  coche.cen.z += cos(((coche.ang*PI)/180))*0.1; 
 	  coche.cen.x += sin(((coche.ang*PI)/180))*0.1;
@@ -162,7 +190,6 @@ void keyboarEve(unsigned char key, int x, int y)
 	if(key == 's'){
 	  coche.cen.z -= cos(((coche.ang*PI)/180))*0.1; 
 	  coche.cen.x -= sin(((coche.ang*PI)/180))*0.1;
-
 	}
 	if(key == 'a') coche.ang += 2;
 	if(key == 'd') coche.ang += -2;
@@ -351,12 +378,12 @@ void refresh(void) {
  	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 	glPushMatrix();
-
-		glTranslatef(0,0,-cam.d);
-		glRotatef(cam.theta,1,0,0);
-		glRotatef(cam.phi,0,1,0);
-		glTranslatef(-cam.VRP.x,-cam.VRP.y,-cam.VRP.z);
-		
+		if (!modeFP) {
+			glTranslatef(0,0,-cam.d);
+			glRotatef(cam.theta,1,0,0);
+			glRotatef(cam.phi,0,1,0);
+			glTranslatef(-cam.VRP.x,-cam.VRP.y,-cam.VRP.z);
+		}
 		glPushMatrix();
 			glTranslatef(2.5,0,2.5);
 			snowMan();
@@ -406,6 +433,7 @@ int main(int argc,const char * argv[])
 	modeRotate = false;
 	modePres = false;
 	modeWalls = false;
+	modeFP = false;
 	escena = esfera_cont_esce();
 	//POS
 	coche.cen.x = 0;
