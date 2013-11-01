@@ -73,6 +73,7 @@ int mx,my;
 
 //RANDOM
 float vecColor[4];
+double vecNormal[3];
 
 void initGL (int argc, const char *argv[])
  {
@@ -120,6 +121,17 @@ void ini_camara_optica (){
 	optica_pres[3] = cam.d + escena.rad;//zfar;
 }
 
+void firstPersonView () {
+	glMatrixMode(GL_PROJECTION);	
+	glLoadIdentity();
+	gluPerspective(80,1,0.1,20);
+	gluLookAt(coche.cen.x,coche.cen.y+0.5,coche.cen.z,	//OBS
+		coche.cen.x+sin(coche.ang*PI/180), 				//VRP
+		coche.cen.y+0.2,
+		coche.cen.z+cos(coche.ang*PI/180), 				//up
+		0,1,0);			
+	glMatrixMode(GL_MODELVIEW);
+}
 void setViewport(int w, int h) {
 	width = w;
 	height = h;
@@ -133,38 +145,44 @@ void setViewport(int w, int h) {
 void keyboarEve(unsigned char key, int x, int y) 
 {
 	if (key == 'h') {
-		cout << "HELP" << endl;
-		cout << "p -> Cambia entre camara prespectiva y ortho" << endl;
-		cout << "q -> Activa/Desactiva rotacion" << endl;
-		cout << "v -> Muestra/Oculta las apredes" << endl;
-		cout << "m -> Camara en primera persona" << endl;
-		cout << "r -> Resetea camara" << endl;
-		cout << "Rueda del raton -> Zoom in/Zoom out" << endl;
-		cout << "'w','a','s', 'd' para mover el coche" << endl;
-		cout << "ESC -> Cerrar programa" << endl; 
+		cout
+		<< "HELP" << endl
+		<< "[" << modePres << "]" 
+		<< "	p -> Activa/Desactiva camara en prespectiva" << endl
+		<< "[" << modeRotate << "]" 
+		<< "	q -> Activa/Desactiva rotacion" << endl
+		<< "[" << modeWalls << "]" 
+		<< "	v -> Muestra/Oculta las apredes" << endl
+		<< "[" << modeFP << "]" 
+		<< "	m -> Camara en primera persona" << endl
+		<< "[" << modeLight << "]" 
+		<< "	t -> Activa/Desactiva luces" << endl
+		<< "[" << modeVertex << "]" 
+		<< "	b -> Activa/Desactiva normal por vertices" << endl
+		<< "	r -> Resetea camara" << endl
+		<< "	ESC -> Cerrar programa" << endl
+		<< "	Rueda del raton -> Zoom in/Zoom out" << endl
+		<< "	'w','a','s', 'd' para mover el coche" << endl;
+	}
+	if (key == 'b') {
+		modeVertex = !modeVertex;
 	}
 	if (key == 'q') {
 		modeRotate = !modeRotate;
-		if (modeRotate) cout << "Haz clic y desplaza el raton para rotar la figura - mode 1" << endl;
-		else cout << "Modo rotacion desactivado" << endl;
 	}
 	if (key == 'p') {
 		modePres = !modePres;
 		//ini_camara_optica();
 		if (modePres) {
 			conf_camara_pres();
-		 	cout << "Camara en prespectiva" << endl;	
 		}
 		else {
 			conf_camara_ortho();
-			cout << "Camara orthogonal" << endl;	
 		}
 		glutPostRedisplay();
 	}
 	if (key == 'v') {
 		modeWalls = !modeWalls;
-		if (modeWalls) cout << "Muestra paredes" << endl;
-		else cout << "Oculta paredes" << endl;
 		glutPostRedisplay();
 	}
 	if (key == 'r') {
@@ -175,23 +193,15 @@ void keyboarEve(unsigned char key, int x, int y)
 		cam.phi = 45;
 		glutPostRedisplay();
 	}
-	/*if (key == 'm') {
+	if (key == 'm') {
 		modeFP = !modeFP;
-		if (modeFP) {
-			gluLookAt(coche.cen.x,coche.cen.y,coche.cen.z-2, 	//OBS
-				coche.cen.x,coche.cen.y,coche.cen.z-3,			//VRP
-				0,1,0);											//up
-			glMatrixMode(GL_PROJECTION);	
-			glLoadIdentity();				
-			gluPerspective(60,1,1,10);
-			glMatrixMode(GL_MODELVIEW);
-		}
+		if (modeFP) firstPersonView();
 		else {
 			ini_camara_optica();
 			conf_camara_pres();
 		}
 		glutPostRedisplay();	
-	}*/
+	}
 	if(key == 'w'){
 	  coche.cen.z += cos(((coche.ang*PI)/180))*0.1; 
 	  coche.cen.x += sin(((coche.ang*PI)/180))*0.1;
@@ -205,7 +215,11 @@ void keyboarEve(unsigned char key, int x, int y)
 	if(key == 'd') coche.ang += -2;
 	if (key == 'a' or key == 's' or key == 'w' or key == 'd') glutPostRedisplay();
 	
-	if (key == 27) exit(0);
+	if(key == 'l') {
+		modeLight = !modeLight;
+		glutPostRedisplay();
+	}
+	if(key == 27) exit(0);
 }
 
 void mouseMove (int w, int h){
@@ -347,12 +361,15 @@ void pinta_model() {
 			if(!modeLight) {
 				glColor3f(Materials[f[i].mat].diffuse[0],Materials[f[i].mat].diffuse[1],
 				Materials[f[i].mat].diffuse[2]);
+				glVertex3dv(&m.vertices()[f[i].v[0]]);
+				glVertex3dv(&m.vertices()[f[i].v[1]]);
+				glVertex3dv(&m.vertices()[f[i].v[2]]);
 			}
 			else {
 				if (!modeVertex)
 				{
 					glNormal3dv(f[i].normalC);
-					glMaterialfv(GL_FRONT,GL_AMBIENT, Materials[f[i].mat].ambient);
+					glMaterialfv(GL_FRONT,GL_AMBIENT , Materials[f[i].mat].ambient);
 					glMaterialfv(GL_FRONT,GL_DIFFUSE, Materials[f[i].mat].diffuse);
 					glMaterialfv(GL_FRONT,GL_SPECULAR, Materials[f[i].mat].specular);
 					glMateriali(GL_FRONT,GL_SHININESS, Materials[f[i].mat].shininess);
@@ -361,8 +378,15 @@ void pinta_model() {
 					glVertex3dv(&m.vertices()[f[i].v[2]]);
 				}
 				else  {
+					glMaterialfv(GL_FRONT,GL_AMBIENT , Materials[f[i].mat].ambient);
+					glMaterialfv(GL_FRONT,GL_DIFFUSE, Materials[f[i].mat].diffuse);
+					glMaterialfv(GL_FRONT,GL_SPECULAR, Materials[f[i].mat].specular);
+					glMateriali(GL_FRONT,GL_SHININESS, Materials[f[i].mat].shininess);
+					glNormal3dv(&m.vertices()[f[i].n[0]]);
 					glVertex3dv(&m.vertices()[f[i].v[0]]);
+					glNormal3dv(&m.vertices()[f[i].n[1]]);
 					glVertex3dv(&m.vertices()[f[i].v[1]]);
+					glNormal3dv(&m.vertices()[f[i].n[2]]);
 					glVertex3dv(&m.vertices()[f[i].v[2]]);	
 				}
 			}
@@ -371,11 +395,16 @@ void pinta_model() {
 }
 
 void pinta_terra(){
+	glPushMatrix();
 	glBegin(GL_QUADS);
 		glColor3f(0,0.26,0.20);
-		vecColor[0] = 90;
-		vecColor[1] = 20;
-		vecColor[2] = 10;
+		vecNormal[0] = 0;
+		vecNormal[1] = 1;
+		vecNormal[2] = 0;
+		glNormal3dv(vecNormal);
+		vecColor[0] = 0;
+		vecColor[1] = 0.26;
+		vecColor[2] = 0.20;
 		glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
 		glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
 		glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
@@ -385,6 +414,7 @@ void pinta_terra(){
 		glVertex3d(-5,0,-5);
 		glVertex3d(5,0,-5);
 	glEnd();
+	glPopMatrix();
 }
 
 void pinta_ejes(){
@@ -407,14 +437,23 @@ void pinta_ejes(){
 
 void pinta_paret (){
 	glPushMatrix();
-		glTranslatef(2.5,0.75,-1.5);
-		glScaled(4,1.5,0.2);
-		glutSolidCube(1);
-	glPopMatrix();
-	glPushMatrix();
-		glTranslatef(-4.9,0.75,0);
-		glScaled(0.2,1.5,10);
-		glutSolidCube(1);
+		vecColor[0] = 0.30;
+		vecColor[1] = 0.40;
+		vecColor[2] = 0;
+		glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
+		glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
+		glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
+		glMateriali(GL_FRONT,GL_SHININESS, 1);
+		glPushMatrix();
+			glTranslatef(2.5,0.75,-1.5);
+			glScaled(4,1.5,0.2);
+			glutSolidCube(1);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(-4.9,0.75,0);
+			glScaled(0.2,1.5,10);
+			glutSolidCube(1);
+		glPopMatrix();
 	glPopMatrix();
 }
 
@@ -423,6 +462,8 @@ void refresh(void) {
 	else glDisable(GL_LIGHTING);
 	if(modeLight) glEnable(GL_LIGHT0); 
 	else glDisable(GL_LIGHT0); 
+
+	if (modeFP) firstPersonView();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  	glMatrixMode (GL_MODELVIEW);
@@ -454,7 +495,6 @@ void refresh(void) {
 		glPushMatrix();
 			if (modeWalls) pinta_paret();
 		glPopMatrix();
-
 		glPushMatrix();
 			glTranslatef(coche.cen.x,0,coche.cen.z);
 			glRotatef(coche.ang,0,1,0);
