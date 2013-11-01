@@ -517,7 +517,8 @@ void refresh(void) {
 int main(int argc,const char * argv[])
 {
 	initGL(argc,argv);
-	m.load("porsche.obj");
+	//m.load("porsche.obj");
+	m.load("f-16.obj");
 	slices = 50;
 	stacks = 50;
 	modeLight = true;
