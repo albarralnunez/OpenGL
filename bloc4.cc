@@ -166,6 +166,7 @@ void keyboarEve(unsigned char key, int x, int y)
 	}
 	if (key == 'b') {
 		modeVertex = !modeVertex;
+		glutPostRedisplay();
 	}
 	if (key == 'q') {
 		modeRotate = !modeRotate;
