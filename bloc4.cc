@@ -47,8 +47,12 @@ bool modeRotate = false;
 bool modePres = false;
 bool modeWalls = false;
 bool modeFP = false;
-bool modeLight = false;
+bool modeLight0 = false;
+bool modeLight1 = false;
+bool modeLight2 = false;
 bool modeVertex = false;
+int lightVertex = 0;
+bool modeLight = false;
 //
 //CONFIG PARAMETERS
 int stacks;
@@ -74,6 +78,7 @@ int mx,my;
 //RANDOM
 float vecColor[4];
 double vecNormal[3];
+float vecPos[4];
 
 void initGL (int argc, const char *argv[])
  {
@@ -155,8 +160,16 @@ void keyboarEve(unsigned char key, int x, int y)
 		<< "	v -> Muestra/Oculta las apredes" << endl
 		<< "[" << modeFP << "]" 
 		<< "	m -> Camara en primera persona" << endl
+		<< "[" << modeLight0 << "]" 
+		<< "	x -> Activa/Desactiva iluminacion" << endl
 		<< "[" << modeLight << "]" 
-		<< "	t -> Activa/Desactiva luces" << endl
+		<< "	1 -> Activa/Desactiva luz de camara" << endl
+		<< "[" << modeLight1 << "]" 
+		<< "	2 -> Activa/Desactiva luz en la esquina" << endl
+		<< "[" << lightVertex << "]" 
+		<< "	f -> Cambia la posicion de la luz de la esquina" << endl
+		<< "[" << modeLight2 << "]" 
+		<< "	3 -> Activa/Desactiva luz en el coche" << endl
 		<< "[" << modeVertex << "]" 
 		<< "	b -> Activa/Desactiva normal por vertices" << endl
 		<< "	r -> Resetea camara" << endl
@@ -192,6 +205,14 @@ void keyboarEve(unsigned char key, int x, int y)
 		else conf_camara_ortho();
 		cam.theta = 45;
 		cam.phi = 45;
+		modeLight1 = false,
+		modeLight0 = false;
+		modeLight2 = false;
+		modeLight = false;
+		glDisable(GL_LIGHT2);
+		glDisable(GL_LIGHT1);
+		glDisable(GL_LIGHT0);
+		glDisable(GL_LIGHTING);
 		glutPostRedisplay();
 	}
 	if (key == 'm') {
@@ -215,11 +236,39 @@ void keyboarEve(unsigned char key, int x, int y)
 	if(key == 'a') coche.ang += 2;
 	if(key == 'd') coche.ang += -2;
 	if (key == 'a' or key == 's' or key == 'w' or key == 'd') glutPostRedisplay();
-	
-	if(key == 'l') {
-		modeLight = !modeLight;
+
+	if(key == '1') {
+		modeLight1 = !modeLight1;
+		if(modeLight1) glEnable(GL_LIGHT1);
+		else glDisable(GL_LIGHT1); 
 		glutPostRedisplay();
 	}
+	if(key == '2') {
+		modeLight0 = !modeLight0;
+		if(modeLight0) glEnable(GL_LIGHT0);
+		else glDisable(GL_LIGHT0); 
+		glutPostRedisplay();
+	}
+	if(key == '3') {
+		modeLight2 = !modeLight2;
+		if(modeLight2) glEnable(GL_LIGHT2);
+		else glDisable(GL_LIGHT2);
+		glutPostRedisplay();
+	}
+	if (key == 'f') {
+		++lightVertex;
+		if (lightVertex == 4) lightVertex = 0;
+		glutPostRedisplay();	
+	}
+	if (key == 'x') {
+		modeLight = !modeLight;
+		if(modeLight) glEnable(GL_LIGHTING);
+		else glDisable(GL_LIGHTING);
+		glutPostRedisplay();
+	}
+	
+
+
 	if(key == 27) exit(0);
 }
 
@@ -229,7 +278,6 @@ void mouseMove (int w, int h){
 		cam.theta += (y-h)*0.3;
 		x = w;
 		y = h;
-		//cout << cam.theta << "," <<cam.phi << endl;
 		glutPostRedisplay();
 	}
 }
@@ -237,12 +285,14 @@ void mouseMove (int w, int h){
 void mouseClick(int b, int r, int xx, int yy){
 	double rat = width/height;
 	if (modePres) {
-		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP) ++optica_pres[0];
-		else if (GLUT_ACTIVE_CTRL && b == 4 && r == GLUT_UP) --optica_pres[0];
+		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP && optica_pres[0] < 170)
+			++optica_pres[0];
+		else if (GLUT_ACTIVE_CTRL && b == 4 && r == GLUT_UP && optica_pres[0] > 0)
+			--optica_pres[0];
 		conf_camara_pres();	
 	}
 	else {
-		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP) {
+		if (GLUT_ACTIVE_CTRL && b == 3 && r == GLUT_UP ) {
 			optica_ortho[0] = (rat > 1) ? optica_ortho[0]+(0.5*rat) : optica_ortho[0]+0.5;
 			optica_ortho[1] = (rat > 1) ? optica_ortho[1]-(0.5*rat) : optica_ortho[1]-0.5;
 			optica_ortho[2] = (rat > 1) ? optica_ortho[2]+0.5 : optica_ortho[2]+(0.5/rat);
@@ -313,37 +363,40 @@ std::vector<double> calc_cen (caja c) {
 } 
 
 void snowMan() {
-	vecColor[0] = vecColor[1] = vecColor[2] = 1;
-	glPushMatrix();
 		glTranslatef(0,0.4,0);
 		glPushMatrix();
-		glColor3d(1,1,1);
-		glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
-		glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
-		glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
-		glMateriali(GL_FRONT,GL_SHININESS, 1);
-		glutSolidSphere(0.4,stacks,slices);
+			glColor3d(1,1,1);
+			vecColor[0] = vecColor[1] = vecColor[2] = 0.5;
+			glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
+			glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
+			vecColor[0] = vecColor[1] = vecColor[2] = 1;
+			glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
+			glMateriali(GL_FRONT,GL_SHININESS, 100);
+			glutSolidSphere(0.4,stacks,slices);
 		glPopMatrix();
-
 		glPushMatrix();
-		glColor3d(1,1,1);
-		glTranslatef(0,0.6,0);
-		glutSolidSphere(0.2,stacks,slices);
+			glColor3d(1,1,1);
+			glTranslatef(0,0.6,0);
+			vecColor[0] = vecColor[1] = vecColor[2] = 0.5;
+			glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
+			glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
+			vecColor[0] = vecColor[1] = vecColor[2] = 1;
+			glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
+			glMateriali(GL_FRONT,GL_SHININESS, 100);
+			glutSolidSphere(0.2,stacks,slices);
 		glPopMatrix();	
-
 		glPushMatrix();
-		glRotated(90,0,1,0);
-		glTranslatef(0,0.6,0);
-		glTranslatef(0,0,0.1);
-		glColor3d(1,0,0);
-		vecColor[0]= 230;
-		vecColor[1]= 95;
-		vecColor[2]= 0;
-		glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
-		glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
-		glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
-		glMateriali(GL_FRONT,GL_SHININESS, 1);
-		glutSolidCone(0.1,0.2,stacks,slices);
+			glRotated(90,0,1,0);
+			glTranslatef(0,0.6,0);
+			glTranslatef(0,0,0.1);
+			glColor3d(1,0,0);
+			vecColor[0]= 230;vecColor[1]= 95;vecColor[2]= 0;
+			glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
+			glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
+			vecColor[0] = vecColor[1] = vecColor[2] = 1;
+			glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
+			glMateriali(GL_FRONT,GL_SHININESS, 100);
+			glutSolidCone(0.1,0.2,stacks,slices);
 		glPopMatrix();
 	glPopMatrix();
 }
@@ -359,37 +412,29 @@ void pinta_model() {
 	glTranslatef(-centro_caja[0],-centro_caja[1],-centro_caja[2]);
 	for (int i = 0; i < f.size(); ++i) {
 		glBegin(GL_TRIANGLES);
-			if(!modeLight) {
-				glColor3f(Materials[f[i].mat].diffuse[0],Materials[f[i].mat].diffuse[1],
+			glColor3f(Materials[f[i].mat].diffuse[0],Materials[f[i].mat].diffuse[1],
 				Materials[f[i].mat].diffuse[2]);
+			if (!modeVertex) {
+				glNormal3dv(f[i].normalC);
+				glMaterialfv(GL_FRONT,GL_AMBIENT , Materials[f[i].mat].ambient);
+				glMaterialfv(GL_FRONT,GL_DIFFUSE, Materials[f[i].mat].diffuse);
+				glMaterialfv(GL_FRONT,GL_SPECULAR, Materials[f[i].mat].specular);
+				glMateriali(GL_FRONT,GL_SHININESS, Materials[f[i].mat].shininess);
 				glVertex3dv(&m.vertices()[f[i].v[0]]);
 				glVertex3dv(&m.vertices()[f[i].v[1]]);
 				glVertex3dv(&m.vertices()[f[i].v[2]]);
-			}
-			else {
-				if (!modeVertex)
-				{
-					glNormal3dv(f[i].normalC);
-					glMaterialfv(GL_FRONT,GL_AMBIENT , Materials[f[i].mat].ambient);
-					glMaterialfv(GL_FRONT,GL_DIFFUSE, Materials[f[i].mat].diffuse);
-					glMaterialfv(GL_FRONT,GL_SPECULAR, Materials[f[i].mat].specular);
-					glMateriali(GL_FRONT,GL_SHININESS, Materials[f[i].mat].shininess);
-					glVertex3dv(&m.vertices()[f[i].v[0]]);
-					glVertex3dv(&m.vertices()[f[i].v[1]]);
-					glVertex3dv(&m.vertices()[f[i].v[2]]);
-				}
-				else  {
-					glMaterialfv(GL_FRONT,GL_AMBIENT , Materials[f[i].mat].ambient);
-					glMaterialfv(GL_FRONT,GL_DIFFUSE, Materials[f[i].mat].diffuse);
-					glMaterialfv(GL_FRONT,GL_SPECULAR, Materials[f[i].mat].specular);
-					glMateriali(GL_FRONT,GL_SHININESS, Materials[f[i].mat].shininess);
-					glNormal3dv(&m.vertices()[f[i].n[0]]);
-					glVertex3dv(&m.vertices()[f[i].v[0]]);
-					glNormal3dv(&m.vertices()[f[i].n[1]]);
-					glVertex3dv(&m.vertices()[f[i].v[1]]);
-					glNormal3dv(&m.vertices()[f[i].n[2]]);
-					glVertex3dv(&m.vertices()[f[i].v[2]]);	
-				}
+			}	
+			else  {
+				glMaterialfv(GL_FRONT,GL_AMBIENT , Materials[f[i].mat].ambient);
+				glMaterialfv(GL_FRONT,GL_DIFFUSE, Materials[f[i].mat].diffuse);
+				glMaterialfv(GL_FRONT,GL_SPECULAR, Materials[f[i].mat].specular);
+				glMateriali(GL_FRONT,GL_SHININESS, Materials[f[i].mat].shininess);
+				glNormal3dv(&m.normals()[f[i].n[0]]);
+				glVertex3dv(&m.vertices()[f[i].v[0]]);
+				glNormal3dv(&m.normals()[f[i].n[1]]);
+				glVertex3dv(&m.vertices()[f[i].v[1]]);
+				glNormal3dv(&m.normals()[f[i].n[2]]);
+				glVertex3dv(&m.vertices()[f[i].v[2]]);	
 			}
 		glEnd();
 	}
@@ -397,23 +442,41 @@ void pinta_model() {
 
 void pinta_terra(){
 	glPushMatrix();
+	glColor3f(0,0.26,0.20);
+	vecNormal[0] = 0;
+	vecNormal[1] = 1;
+	vecNormal[2] = 0;
+	glNormal3dv(vecNormal);
+	vecColor[0] = 0;vecColor[1] = 0;vecColor[2] = 100;
+	glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
+	vecColor[0] = 0;vecColor[1] = 0;vecColor[2] = 150;
+	glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
+	vecColor[0] = 0;vecColor[1] = 0;vecColor[2] = 1;
+	glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
+	glMateriali(GL_FRONT,GL_SHININESS, 64);
 	glBegin(GL_QUADS);
-		glColor3f(0,0.26,0.20);
-		vecNormal[0] = 0;
-		vecNormal[1] = 1;
-		vecNormal[2] = 0;
-		glNormal3dv(vecNormal);
-		vecColor[0] = 0;
-		vecColor[1] = 0.26;
-		vecColor[2] = 0.20;
-		glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
-		glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
-		glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
-		glMateriali(GL_FRONT,GL_SHININESS, 1);
 		glVertex3d(5,0,5);
-		glVertex3d(-5,0,5);
-		glVertex3d(-5,0,-5);
+		glVertex3d(0,0,5);
+		glVertex3d(0,0,0);
+		glVertex3d(5,0,0);
+	glEnd();
+	glBegin(GL_QUADS);
+		glVertex3d(0,0,0);
+		glVertex3d(0,0,-5);
 		glVertex3d(5,0,-5);
+		glVertex3d(5,0,0);
+	glEnd();
+	glBegin(GL_QUADS);
+		glVertex3d(-5,0,5);
+		glVertex3d(-5,0,0);
+		glVertex3d(0,0,0);
+		glVertex3d(0,0,5);
+	glEnd();
+	glBegin(GL_QUADS);
+		glVertex3d(-5,0,0);
+		glVertex3d(-5,0,-5);
+		glVertex3d(0,0,-5);
+		glVertex3d(0,0,0);
 	glEnd();
 	glPopMatrix();
 }
@@ -438,13 +501,12 @@ void pinta_ejes(){
 
 void pinta_paret (){
 	glPushMatrix();
-		vecColor[0] = 0.30;
-		vecColor[1] = 0.40;
-		vecColor[2] = 0;
+		vecColor[0] = 0.30;vecColor[1] = 0.40;vecColor[2] = 0;
 		glMaterialfv(GL_FRONT,GL_AMBIENT, vecColor);
+		vecColor[0] = 1;vecColor[1] = 1;vecColor[2] = 0;
 		glMaterialfv(GL_FRONT,GL_DIFFUSE, vecColor);
 		glMaterialfv(GL_FRONT,GL_SPECULAR, vecColor);
-		glMateriali(GL_FRONT,GL_SHININESS, 1);
+		glMateriali(GL_FRONT,GL_SHININESS, 64);
 		glPushMatrix();
 			glTranslatef(2.5,0.75,-1.5);
 			glScaled(4,1.5,0.2);
@@ -459,23 +521,55 @@ void pinta_paret (){
 }
 
 void refresh(void) {
-	if(modeLight) glEnable(GL_LIGHTING);
-	else glDisable(GL_LIGHTING);
-	if(modeLight) glEnable(GL_LIGHT0); 
-	else glDisable(GL_LIGHT0); 
-
 	if (modeFP) firstPersonView();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
-	glPushMatrix();
+	//glPushMatrix();
+
+		if (modeLight1) {
+			vecPos[0] = 0;vecPos[1] = 0;vecPos[2] = 0;vecPos[3] = 1;
+			glLightfv(GL_LIGHT1,GL_POSITION,vecPos);
+			vecColor[0] = 0.5;vecColor[1] = 0.5;vecColor[2] = 0.5;
+			glLightfv(GL_LIGHT1,GL_AMBIENT ,vecColor);
+			vecColor[0] = 0.75;vecColor[1] = 0.75;vecColor[2] = 0.75;
+			glLightfv(GL_LIGHT1,GL_DIFFUSE,vecColor);
+			vecColor[0] = 1;vecColor[1] = 1;vecColor[2] = 1;
+			glLightfv(GL_LIGHT1,GL_SPECULAR,vecColor);
+		}
+
 		if (!modeFP) {
 			glTranslatef(0,0,-cam.d);
 			glRotatef(cam.theta,1,0,0);
 			glRotatef(cam.phi,0,1,0);
 			glTranslatef(-cam.VRP.x,-cam.VRP.y,-cam.VRP.z);
 		}
+
+		//glPushMatrix();
+			if (modeLight0) {
+				if (lightVertex == 0) {
+					vecPos[0] = 5; vecPos[1] = 5; vecPos[2] = 5; vecPos[3] = 1;
+				}
+				else if (lightVertex == 1) {
+					vecPos[0] = 5; vecPos[1] = 5; vecPos[2] = -5; vecPos[3] = 1;
+				}
+				else if (lightVertex == 2) {
+					vecPos[0] = -5; vecPos[1] = 5; vecPos[2] = -5; vecPos[3] = 1;
+				}
+				else if (lightVertex == 3) {
+					vecPos[0] = -5; vecPos[1] = 5; vecPos[2] = 5; vecPos[3] = 1;
+				}
+				vecColor[0] = 1;vecColor[1] = 1;vecColor[2] = 0;
+				glLightfv(GL_LIGHT0,GL_AMBIENT ,vecColor);
+				vecColor[0] = 0.75;vecColor[1] = 0.75;vecColor[2] = 0;
+				glLightfv(GL_LIGHT0,GL_DIFFUSE,vecColor);
+				vecColor[0] = 1;vecColor[1] = 1;vecColor[2] = 0;
+				glLightfv(GL_LIGHT0,GL_SPECULAR,vecColor);
+				glLightfv(GL_LIGHT0,GL_POSITION,vecPos);
+			}
+		//glPopMatrix();
+
 		glPushMatrix();
 			glTranslatef(2.5,0,2.5);
 			snowMan();
@@ -500,17 +594,21 @@ void refresh(void) {
 			glTranslatef(coche.cen.x,0,coche.cen.z);
 			glRotatef(coche.ang,0,1,0);
 			pinta_model();
+			vecPos[0] = coche.cen.x; vecPos[1] = 5; vecPos[2] = coche.cen.z; vecPos[3] = 1;
+			if (modeLight2){
+				vecColor[0] = 1;vecColor[1] = 1;vecColor[2] = 1;
+				glLightfv(GL_LIGHT2,GL_POSITION,vecPos);
+				glLightfv(GL_LIGHT2,GL_AMBIENT ,vecColor);
+				glLightfv(GL_LIGHT2,GL_DIFFUSE,vecColor);
+				glLightfv(GL_LIGHT2,GL_SPECULAR,vecColor);
+			}
 		glPopMatrix();
 		
 		glPushMatrix();
 			pinta_terra();
 		glPopMatrix();
 
-	glPopMatrix();
-
-	glPushMatrix();
-		pinta_ejes();
-	glPopMatrix();
+	//glPopMatrix();
 
 	glutSwapBuffers();
 }
@@ -522,7 +620,6 @@ int main(int argc,const char * argv[])
 	m.load("f-16.obj");
 	slices = 50;
 	stacks = 50;
-	modeLight = true;
 	escena = esfera_cont_esce();
 	//POS
 	coche.cen.x = 0;
